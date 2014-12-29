@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+echo "Runing: '$@'"
+
+if [ -z $METRIC_LABEL ]; then
+  echo "Need a METRIC_LABEL to continue."
+  exit
+fi
+
+# Start the timer.
+TIME_START=$(perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)')
+
+# Do the thing.
+`$@`
+
+# Stop the timer.
+TIME_END=$(perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)')
+
+((TIME_SPENT=$TIME_END-$TIME_START))
+
+# Log the metric locally.
+echo "$METRIC_LABEL:$TIME_SPENT|c" | nc -w 1 -u 127.0.0.1 8125
+
+# Send the event to Datadog.
